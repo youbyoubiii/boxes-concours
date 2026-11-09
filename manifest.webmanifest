@@ -1,0 +1,10 @@
+{
+  "name": "Gestion des boxes · concours",
+  "short_name": "Boxes",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#EDF1EF",
+  "theme_color": "#1f3b33",
+  "lang": "fr",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

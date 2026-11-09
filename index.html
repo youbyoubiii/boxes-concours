@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gestion des boxes · groupes et plan</title>
+<meta name="theme-color" content="#1f3b33">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main>
+<header class="app-head"><div class="brandmark">BX</div><div class="head-copy"><p class="eyebrow">Organisation du concours · Import CSV</p><h1>Gestion des boxes</h1><p class="sub">Importez les chevaux, rassemblez-les par club, puis attribuez les boxes.</p></div></header>
+<section class="cc-bar" aria-label="Concours ouvert"><div class="cc-cur"><span class="eyebrow">Concours</span><strong id="ccName"></strong><span id="ccOffline" class="cc-offline" hidden>Hors ligne</span><span id="ccState" class="prep-meta" role="status"></span></div><div class="cc-actions"><button id="ccOpen" type="button">Mes concours</button><button id="ccHist" type="button">Historique</button></div></section>
+<div id="ccRemind" class="cc-remind" role="alert" hidden><span>💾 Des changements n’ont pas encore été sauvegardés dans un fichier .json. Gardez une copie sur votre ordinateur au cas où le navigateur serait vidé.</span><div class="cc-actions"><button class="main" id="ccBk" type="button">Télécharger une sauvegarde</button><button id="ccLater" type="button">Plus tard</button></div></div>
+<dialog id="ccDlg" class="cc-dlg"></dialog>
+<div class="tabs" role="tablist" aria-label="Étapes du plan"><button class="tab" id="tprep" role="tab" aria-selected="true"><span class="stepnum">1</span>Groupes</button><button class="tab" id="tp" role="tab" aria-selected="false"><span class="stepnum">2</span>Plan des boxes</button><button class="tab" id="te" role="tab" aria-selected="false"><span class="stepnum">3</span>Écuries</button></div>
+<div id="vPrep">
+ <section class="surface">
+  <section class="import-card"><div><p class="eyebrow">Importer la base</p><h3>Chargez votre CSV pour préparer les groupes</h3><p class="sub">Colonnes utilisées : nom du cheval, sexe, club engageur et surtout club. Les « infos supplémentaires » sont ignorées. Un club renseigné rassemble les chevaux ; sans club, le numéro de réservation sert au regroupement.</p><div class="import-options"><label><input type="checkbox" id="rep"> Remplacer la liste actuelle</label><span id="imsg" class="prep-meta" role="status"></span></div></div><div class="import-actions"><input type="file" id="imp" accept=".csv,.txt" aria-label="Choisir un fichier CSV"><button id="tpl" type="button">Modèle CSV</button></div></section>
+  <div class="prep-intro"><div><p class="eyebrow">Étape 1 · Préparation</p><h2>Préparer les groupes</h2><p class="sub">Le champ « club » définit le groupe lorsqu’il est renseigné. Sans club, les chevaux sont réunis par réservation ; le cavalier sert de dernier recours. Les noms des chevaux restent visibles.</p></div><div class="prep-meta" id="prepStats"></div></div>
+  <div class="prep-controls">
+   <label>Disposition des groupes<select id="groupMode"><option value="both">En ligne ou face à face</option><option value="line">En ligne dans la même allée</option><option value="face">Face à face, même hauteur</option></select></label>
+   <label>Filtrer par groupe<select id="prepStable"><option value="">Tous les groupes</option></select></label>
+   <label>Rechercher un cheval, cavalier ou réservation<input id="prepFilter" type="search" placeholder="Ex. Laurent, Club de l’Aube, n° 124"></label>
+  </div>
+  <details class="rule-panel"><summary>Règles de voisinage</summary><p class="sub">Choisissez si une paire de chevaux est bloquée, signalée ou autorisée. Les règles s’appliquent côte à côte ; cochez la case pour inclure aussi les boxes exactement en face.</p><div class="prep-controls rule-controls"><label>Étalon avec jument<select id="ruleEJ"><option value="block">Bloquer</option><option value="warn">Avertir</option><option value="allow">Autoriser</option></select></label><label>Deux étalons<select id="ruleEE"><option value="block">Bloquer</option><option value="warn">Avertir</option><option value="allow">Autoriser</option></select></label><label>Chevaux marqués « à éviter »<select id="ruleAV"><option value="block">Bloquer</option><option value="warn">Avertir</option><option value="allow">Autoriser</option></select></label></div><label class="face-rule"><input id="ruleFacing" type="checkbox"> Appliquer ces règles aussi aux boxes face à face</label></details>
+  <div class="prep-action"><span class="prep-meta">Pour réunir des chevaux, attribuez-leur la même valeur « club ».</span><button class="main" id="prepBuild" type="button">Recréer le plan par groupe</button><span id="prepMsg" class="prep-meta" role="status"></span></div>
+  <div id="groupEditor" class="group-grid"></div>
+ </section>
+</div>
+<div id="vPlan">
+<p class="sub">Touchez un cheval, puis un box. Le placement automatique rassemble les chevaux par club et évite les conflits.</p>
+<section class="plan-surface">
+<div class="plan-top"><div><p class="eyebrow">Étape 2 · Affectation</p><h2>Plan des boxes</h2><p class="sub">Les couleurs identifient les groupes. Les bandes montrent les paires dos à dos et le passage partagé entre les allées 2 et 3 ; les cases face à face sont alignées.</p></div><div class="stat" id="stat"></div></div>
+<div class="plan-toolbar"><button class="main" id="placeRest">Placer les groupes restants et compléter</button><button id="auto">Recalculer tout le plan</button><button id="clear">Tout vider</button><button id="und">Annuler</button><button id="pdf">Exporter en PDF</button><button id="exp" title="CSV simple : nom du cheval, numéro de box et allée, pour modifier ou afficher le plan">Exporter le plan (CSV simple)</button><button id="expLayout" title="Télécharge une page imprimable avec les blocs, les boxes et les couleurs des groupes">Exporter la mise en page (HTML)</button></div>
+<label class="noholes-option"><input id="noHoles" type="checkbox" checked> Éviter les boxes vides entre deux chevaux, si les règles le permettent</label>
+<section class="plan-group-panel"><h3>Placer progressivement par groupe</h3><p class="sub" style="margin:0">Pour chaque groupe, choisissez la disposition (selon la place, en ligne ou face à face), puis « Extérieur » ou « Allée intérieure ». Le placement échoue avec un message si cette combinaison n’est plus possible sans conflit bloquant ; les autres groupes déjà placés restent en place. « Placer les groupes restants et compléter » garde ces placements, pose les groupes restants, puis les chevaux isolés sans couper un groupe ni ajouter de conflit bloquant.</p><h4 class="plan-group-heading">Groupes à placer</h4><div id="planGroups" class="plan-group-list"></div><h4 class="plan-group-heading">Groupes déjà placés</h4><div id="planGroupsDone" class="plan-group-list"></div></section>
+<p class="sub" id="st" role="status" style="margin:0 0 4px"></p>
+<details id="con" style="margin:6px 0"><summary>Console de commandes</summary>
+<form id="cf" style="margin-top:8px"><input id="cin" placeholder="ex. regrouper Laurent · tasser A · placer Orage A1-1 · aide" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Commande"><button class="main" type="submit">Exécuter</button></form>
+<ul class="alerts" id="cout" style="margin-top:8px"></ul>
+</details>
+<input id="q" type="search" placeholder="Rechercher : cheval, cavalier, club, réservation" aria-label="Rechercher" style="margin-top:6px">
+<ul class="alerts" id="res" style="margin-top:6px"></ul>
+<div id="selbar"></div>
+<div class="pool-panel"><h3>Chevaux à placer · toucher un nom puis un box pour l’affecter</h3>
+<div class="pool" id="pool"></div>
+</div>
+<section id="printArea"><div class="print-head"><div><p class="eyebrow">Concours · Affectation des boxes</p><h2>Plan des boxes</h2></div><span id="printDate" class="prep-meta"></span></div>
+<div id="plan"></div>
+<div class="legend" id="legend"></div>
+</section>
+<div id="horseTip" class="hover-card" role="tooltip" hidden></div>
+<details id="cfg" style="margin-top:10px"><summary>Configurer le plan</summary><div id="cfgbody"></div></details>
+<h3 class="section-title">Conflits et espaces à combler</h3>
+<ul class="alerts" id="alerts"></ul>
+</section>
+<h2 class="section-title">Gestion des données</h2>
+<details><summary>Ajouter un cheval</summary>
+<form id="f">
+<input id="fn" placeholder="Nom du cheval" required>
+<select id="fs"><option value="E">Étalon</option><option value="J">Jument</option><option value="H">Hongre</option><option value="I">Sexe à préciser</option></select>
+<input id="fe" placeholder="Écurie ou club" required>
+<input id="fr" placeholder="Cavalier responsable (si un étalon et une jument réservés ensemble)">
+<input id="fq" placeholder="N° de réservation (facultatif)">
+<select id="fa"><option value="">Aucun cheval à éviter</option></select>
+<button class="main" type="submit">Ajouter le cheval</button>
+</form></details>
+<details style="margin-top:8px"><summary>Sauvegarde et restauration</summary>
+<div style="display:grid;gap:8px;margin-top:10px">
+<p class="sub" style="margin:0">La sauvegarde est un fichier unique (.json) qui contient les chevaux, les groupes, les règles, le plan et le placement. Gardez-le sur votre ordinateur. La restauration remplace les données actuelles (le bouton « Annuler » permet de revenir en arrière).</p>
+<button class="main" id="bk" type="button">Sauvegarder tout (fichier .json)</button>
+<label style="display:grid;gap:4px">Restaurer une sauvegarde<input type="file" id="rst" accept=".json,.txt"></label>
+<p id="bmsg" class="sub" role="status" style="margin:0"></p></div></details>
+</div>
+<div id="vEc" hidden>
+<div class="stat" id="est" style="margin-top:8px"></div>
+<div class="bar"><button class="main" id="eauto" type="button">Placer automatiquement</button><button id="eund" type="button">Annuler la dernière action</button><button id="eexp" type="button">Exporter les écuries (CSV)</button></div>
+<p class="sub" id="emsg" role="status" style="margin:0 0 6px"></p>
+<input id="eq" type="search" placeholder="Filtrer : écurie, club, cheval, cavalier ou réservation" aria-label="Filtrer les écuries">
+<h2>Écuries</h2>
+<div id="elist"></div>
+<details style="margin-top:10px"><summary>Ajouter une écurie</summary>
+<form id="nef">
+<input id="ne_ec" placeholder="Nom de l’écurie ou du club" required>
+<input id="ne_resp" placeholder="Cavalier responsable (facultatif)">
+<div class="gr3"><label>Entiers<input id="ne_E" type="number" min="0" max="50" value="0"></label><label>Hongres<input id="ne_H" type="number" min="0" max="50" value="0"></label><label>Juments (femelles)<input id="ne_J" type="number" min="0" max="50" value="0"></label></div>
+<input id="ne_ref" placeholder="N° de réservation (facultatif)">
+<button class="main" type="submit">Ajouter l’écurie</button>
+</form></details>
+</div>
+</main>
+<script src="js/concours.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

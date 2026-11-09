@@ -1,0 +1,4 @@
+.DS_Store
+sauvegardes/
+*.json.bak
+.claude/
